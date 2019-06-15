@@ -67,9 +67,19 @@ class ViewsCounter_Plugin implements Typecho_Plugin_Interface
             3600,
             _t('对同一篇文章的多次浏览行为是否计入浏览量的时间间隔（单位为秒）')
         );
+		
+		$logged_calc = new Typecho_Widget_Helper_Form_Element_Radio(
+            'logged_calc',
+            array('1' => _t('是'),
+				'0' => _t('否')),
+            '1',
+            _t('是否计算登录用户')
+        );
+		
 //        $form->addInput($think_transaction);
         $form->addInput($popular_limit);
         $form->addInput($cookie_time);
+        $form->addInput($logged_calc);
     }
 
     /**
@@ -91,10 +101,15 @@ class ViewsCounter_Plugin implements Typecho_Plugin_Interface
      */
     public static function count($archive_obj)
     {
-        // 若已登录不执行统计操作
-        if (Typecho_Widget::widget('Widget_User')->hasLogin()) {
-            return;
-        }
+		
+					
+        // 若登录是否执行统计操作
+		$logged_calc = Typecho_Widget::widget('Widget_Options')
+                    ->plugin('ViewsCounter')->logged_calc == '0'?false:true;
+        if (Typecho_Widget::widget('Widget_User')->hasLogin()) 
+			if(!$logged_calc)
+				return;
+        
         
         // 仅对文章进行统计
         if ($archive_obj->is('single')) {
